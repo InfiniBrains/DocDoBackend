@@ -1,4 +1,6 @@
 import {inject} from '@loopback/context';
+import {AuthenticationBindings, AuthenticateFn} from '@loopback/authentication';
+
 import {
   FindRoute,
   InvokeMethod,
@@ -19,12 +21,18 @@ export class MySequence implements SequenceHandler {
     @inject(SequenceActions.INVOKE_METHOD) protected invoke: InvokeMethod,
     @inject(SequenceActions.SEND) public send: Send,
     @inject(SequenceActions.REJECT) public reject: Reject,
+    @inject(AuthenticationBindings.AUTH_ACTION)
+    protected authenticateRequest: AuthenticateFn,
   ) {}
 
   async handle(context: RequestContext) {
     try {
       const {request, response} = context;
       const route = this.findRoute(request);
+
+      // This is the important line added to the default sequence implementation
+      await this.authenticateRequest(request);
+
       const args = await this.parseParams(request, route);
       const result = await this.invoke(route, args);
       this.send(response, result);
