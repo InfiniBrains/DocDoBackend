@@ -1,1 +1,1 @@
-web: export PATH="$PATH:./node_modules/.bin" ; npm run compile ; npm run start
+web: npm start
