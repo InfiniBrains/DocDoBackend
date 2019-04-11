@@ -1,8 +1,14 @@
 {
-  "$schema": "http://json.schemastore.org/tsconfig",
-  "extends": "@loopback/build/config/tsconfig.common.json",
+  "compileOnSave": false,
   "compilerOptions": {
-    "rootDir": "src"
+    "target": "es6",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "typeRoots": ["node_modules/@types"]
   },
-  "include": ["src"]
+  "include": ["typings.d.ts", "server/**/*.ts"],
+  "exclude": ["node_modules"]
 }
