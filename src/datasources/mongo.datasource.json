@@ -1,0 +1,10 @@
+{
+  "name": "mongo",
+  "connector": "mongodb",
+  "url": "mongodb://infinibrains:JD69eXMDPRCsuxW@ds247449.mlab.com:47449/heroku_2zsn2gw6",
+  "host": "",
+  "port": 0,
+  "user": "",
+  "password": "",
+  "database": "users"
+}
