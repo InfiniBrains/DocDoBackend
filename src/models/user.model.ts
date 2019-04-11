@@ -73,7 +73,6 @@ export class User extends Entity {
   })
   updatedAt: string;
 
-
   constructor(data?: Partial<User>) {
     super(data);
   }
