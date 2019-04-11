@@ -61,7 +61,7 @@ export class UserController {
       from: from,
       to: to,
       subject: subject,
-      text: text
+      html: text
     });
   }
 
@@ -110,7 +110,7 @@ export class UserController {
       'contact@docdo.com.br',
       newuser.email,
       "[InfiniBrains] Validate you account",
-      'Validate your user at DocDo by clicking <a href="https://infinibrains.herokuapp.com/validate/' + token +'">here</a>.'
+      'Validate your user at DocDo by clicking <a href="https://infinibrains.herokuapp.com/validate/' + token +'">here</a>. This validation link expires tomorrow.'
     );
     console.log(emailresult);
 
