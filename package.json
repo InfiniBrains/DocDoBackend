@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "compile": "ts-node build.ts && tsc",
-    "dev": "nodemon server/index.ts | pino-pretty",
-    "dev:debug": "nodemon --exec 'node -r ts-node/register --inspect-brk' server/index.ts | pino-pretty",
-    "test": "mocha test/**/*.ts --exit",
-    "test:debug": "mocha --inspect-brk test/**/*.ts --exit"
+    "compile": "./node_modules/.bin/ts-node build.ts && ./node_modules/.bin/tsc",
+    "dev": "./node_modules/.bin/nodemon server/index.ts | ./node_modules/.bin/pino-pretty",
+    "dev:debug": "./node_modules/.bin/nodemon --exec 'node -r ts-node/register --inspect-brk' server/index.ts | pino-pretty",
+    "test": "./node_modules/.bin/mocha test/**/*.ts --exit",
+    "test:debug": "./node_modules/.bin/mocha --inspect-brk test/**/*.ts --exit"
   },
   "dependencies": {
     "bluebird": "^3.5.3",
@@ -19,7 +19,8 @@
     "express": "^4.16.4",
     "passport-local": "^1.0.0",
     "pino": "^5.11.1",
-    "swagger-express-middleware": "^2.0.1"
+    "swagger-express-middleware": "^2.0.1",
+    "typescript": "^3.4.3"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.26",
@@ -35,8 +36,7 @@
     "supertest": "^3.4.2",
     "ts-lint": "^4.5.1",
     "ts-node": "^8.0.2",
-    "tslint": "^5.13.1",
-    "typescript": "^3.3.3333"
+    "tslint": "^5.13.1"
   },
   "author": ""
 }
