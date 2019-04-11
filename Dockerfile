@@ -16,8 +16,6 @@ COPY --chown=node package*.json ./
 
 RUN npm install
 
-RUN npm audit fix
-
 # Bundle app source code
 COPY --chown=node . .
 

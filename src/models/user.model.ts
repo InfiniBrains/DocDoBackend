@@ -5,7 +5,7 @@ export class User extends Entity {
   @property({
     type: 'string',
     id: true,
-    required: true,
+    generated: true,
   })
   id: string;
 
@@ -29,15 +29,15 @@ export class User extends Entity {
 
   @property({
     type: 'boolean',
-    required: true,
     default: false,
+    required: true,
   })
   validated: boolean;
 
   @property({
     type: 'boolean',
-    required: true,
     default: true,
+    required: true,
   })
   active: boolean;
 
@@ -45,7 +45,7 @@ export class User extends Entity {
     type: 'string',
     required: true,
   })
-  realmId: string;
+  realmId: string|undefined;
 
   @property({
     type: 'array',
@@ -55,11 +55,12 @@ export class User extends Entity {
   })
   roles: string[];
 
+  // in minutes
   @property({
-    type: 'date',
+    type: 'number',
     required: true,
   })
-  defaultTokenExpirationTime: string;
+  defaultTokenExpirationTime: number;
 
   @property({
     type: 'date',
