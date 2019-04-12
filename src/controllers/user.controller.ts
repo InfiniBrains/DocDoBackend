@@ -1,7 +1,6 @@
 import {
   Count,
   CountSchema,
-  Options,
   Filter,
   repository,
   Where,
@@ -17,13 +16,12 @@ import {
   del,
   requestBody,
 } from '@loopback/rest';
-import {User, UserCreateRequest, UserCreateResponse} from '../models';
+import {User, UserCreateRequest, UserCreateResponse, UserSignInRequest, UserSignInResponse} from '../models';
 import {UserRepository} from '../repositories';
 let crypto = require('crypto');
 import {HttpErrors} from '@loopback/rest';
 import * as EmailValidator from 'email-validator';
 import {AnyObject} from '@loopback/repository/src/common-types';
-import {Command, NamedParameters} from '@loopback/repository/dist/common-types';
 let jwt = require('jsonwebtoken');
 let nodemailer = require("nodemailer");
 let sgTransport = require('nodemailer-sendgrid-transport');
@@ -65,7 +63,35 @@ export class UserController {
     });
   }
 
-  @post('/users', {
+  @post('/user/signin',{
+    responses: {
+      '200': {
+        description: 'Get the JWT acces token',
+        content: {'application/json': {schema: {'x-ts-type': UserSignInResponse}}}
+      },
+    },
+  })
+  async signin(@requestBody() req:UserSignInRequest): Promise<UserSignInResponse> {
+    let user = await this.userRepository.findOne( {where:{email:req.email}});
+    if(!user || user.hash !== sha512(req.password, user.salt)) {
+      throw new HttpErrors.NotFound('User not found or wrong password');
+    }
+
+    let token = jwt.sign({ email: user.email }, user.salt, {
+      expiresIn: user.defaultTokenExpirationTime*60 // expires in 24 hours
+    });
+
+    let expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate()+1);
+
+    let response = new UserSignInResponse();
+    response.token = token;
+    response.expiresAt = expiresAt.toISOString();
+
+    return response;
+  };
+
+  @post('/user/signup', {
     responses: {
       '200': {
         description: 'User model instance',
@@ -92,7 +118,7 @@ export class UserController {
     newuser.hash = sha512(user.password, newuser.salt);
     newuser.realmId = user.realmId ? user.realmId : 'global';
     newuser.active = true;
-    newuser.createdAt = new Date().toLocaleString();
+    newuser.createdAt = new Date().toISOString();
     newuser.updatedAt = newuser.createdAt;
     newuser.roles = ["patient"];
     newuser.defaultTokenExpirationTime = 1440; // TODO: use realm expirationtime here
@@ -110,7 +136,7 @@ export class UserController {
       'contact@docdo.com.br',
       newuser.email,
       "[InfiniBrains] Validate you account",
-      'Validate your user at DocDo by clicking <a href="https://infinibrains.herokuapp.com/validate/' + token +'">here</a>. This validation link expires tomorrow.'
+      'Validate your user at DocDo by clicking <a href="https://infinibrains.herokuapp.com/user/validate/' + token +'">here</a>. This validation link expires tomorrow.'
     );
     console.log(emailresult);
 
@@ -119,57 +145,57 @@ export class UserController {
     userCreateResponse.email = userCreationResult.email;
     userCreateResponse.createdAt = userCreationResult.createdAt;
 
-    return userCreateResponse
-  }
+    return userCreateResponse;
+  };
 
-  @get('/users/count', {
-    responses: {
-      '200': {
-        description: 'User model count',
-        content: {'application/json': {schema: CountSchema}},
-      },
-    },
-  })
-  async count(
-    @param.query.object('where', getWhereSchemaFor(User)) where?: Where,
-  ): Promise<Count> {
-    return await this.userRepository.count(where);
-  }
+  // @get('/users/count', {
+  //   responses: {
+  //     '200': {
+  //       description: 'User model count',
+  //       content: {'application/json': {schema: CountSchema}},
+  //     },
+  //   },
+  // })
+  // async count(
+  //   @param.query.object('where', getWhereSchemaFor(User)) where?: Where,
+  // ): Promise<Count> {
+  //   return await this.userRepository.count(where);
+  // }
 
-  @get('/users', {
-    responses: {
-      '200': {
-        description: 'Array of User model instances',
-        content: {
-          'application/json': {
-            schema: {type: 'array', items: {'x-ts-type': User}},
-          },
-        },
-      },
-    },
-  })
-  async find(
-    @param.query.object('filter', getFilterSchemaFor(User)) filter?: Filter,
-  ): Promise<User[]> {
-    return await this.userRepository.find(filter);
-  }
+  // @get('/users', {
+  //   responses: {
+  //     '200': {
+  //       description: 'Array of User model instances',
+  //       content: {
+  //         'application/json': {
+  //           schema: {type: 'array', items: {'x-ts-type': User}},
+  //         },
+  //       },
+  //     },
+  //   },
+  // })
+  // async find(
+  //   @param.query.object('filter', getFilterSchemaFor(User)) filter?: Filter,
+  // ): Promise<User[]> {
+  //   return await this.userRepository.find(filter);
+  // }
 
-  @patch('/users', {
-    responses: {
-      '200': {
-        description: 'User PATCH success count',
-        content: {'application/json': {schema: CountSchema}},
-      },
-    },
-  })
-  async updateAll(
-    @requestBody() user: User,
-    @param.query.object('where', getWhereSchemaFor(User)) where?: Where,
-  ): Promise<Count> {
-    return await this.userRepository.updateAll(user, where);
-  }
+  // @patch('/users', {
+  //   responses: {
+  //     '200': {
+  //       description: 'User PATCH success count',
+  //       content: {'application/json': {schema: CountSchema}},
+  //     },
+  //   },
+  // })
+  // async updateAll(
+  //   @requestBody() user: User,
+  //   @param.query.object('where', getWhereSchemaFor(User)) where?: Where,
+  // ): Promise<Count> {
+  //   return await this.userRepository.updateAll(user, where);
+  // }
 
-  @get('/users/validate/{token}',{
+  @get('/user/validate/{token}',{
     responses:{
       '200': {
         description: 'Validate user email',
@@ -182,7 +208,7 @@ export class UserController {
       },
     }
   })
-  async validate(@param.path.string('token') token: string): Promise<AnyObject> { // TODO: improve error handling
+  async validate(@param.path.string('token') token: string): Promise<AnyObject> { // TODO: improve error handling and response schema
     let email64 = token.split('.')[1];
     let buff = new Buffer(email64, 'base64');
     let email = JSON.parse(buff.toString('utf8')).email;
@@ -193,7 +219,6 @@ export class UserController {
     let user = await this.userRepository.findOne( {where:{email:email}});
     if(!user)
       throw new HttpErrors.NotFound('User not found!');
-
 
     try {
       await jwt.verify(token, user.salt);
@@ -207,54 +232,54 @@ export class UserController {
     return {response: 'ok'};
   }
 
-  @get('/users/{id}', {
-    responses: {
-      '200': {
-        description: 'User model instance',
-        content: {'application/json': {schema: {'x-ts-type': User}}},
-      },
-    },
-  })
-  async findById(@param.path.string('id') id: string): Promise<User> {
-    return await this.userRepository.findById(id);
-  }
+  // @get('/users/{id}', {
+  //   responses: {
+  //     '200': {
+  //       description: 'User model instance',
+  //       content: {'application/json': {schema: {'x-ts-type': User}}},
+  //     },
+  //   },
+  // })
+  // async findById(@param.path.string('id') id: string): Promise<User> {
+  //   return await this.userRepository.findById(id);
+  // }
 
-  @patch('/users/{id}', {
-    responses: {
-      '204': {
-        description: 'User PATCH success',
-      },
-    },
-  })
-  async updateById(
-    @param.path.string('id') id: string,
-    @requestBody() user: User,
-  ): Promise<void> {
-    await this.userRepository.updateById(id, user);
-  }
+  // @patch('/users/{id}', {
+  //   responses: {
+  //     '204': {
+  //       description: 'User PATCH success',
+  //     },
+  //   },
+  // })
+  // async updateById(
+  //   @param.path.string('id') id: string,
+  //   @requestBody() user: User,
+  // ): Promise<void> {
+  //   await this.userRepository.updateById(id, user);
+  // }
 
-  @put('/users/{id}', {
-    responses: {
-      '204': {
-        description: 'User PUT success',
-      },
-    },
-  })
-  async replaceById(
-    @param.path.string('id') id: string,
-    @requestBody() user: User,
-  ): Promise<void> {
-    await this.userRepository.replaceById(id, user);
-  }
+  // @put('/users/{id}', {
+  //   responses: {
+  //     '204': {
+  //       description: 'User PUT success',
+  //     },
+  //   },
+  // })
+  // async replaceById(
+  //   @param.path.string('id') id: string,
+  //   @requestBody() user: User,
+  // ): Promise<void> {
+  //   await this.userRepository.replaceById(id, user);
+  // }
 
-  @del('/users/{id}', {
-    responses: {
-      '204': {
-        description: 'User DELETE success',
-      },
-    },
-  })
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
-    await this.userRepository.deleteById(id);
-  }
+  // @del('/users/{id}', {
+  //   responses: {
+  //     '204': {
+  //       description: 'User DELETE success',
+  //     },
+  //   },
+  // })
+  // async deleteById(@param.path.string('id') id: string): Promise<void> {
+  //   await this.userRepository.deleteById(id);
+  // }
 }
