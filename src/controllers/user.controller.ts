@@ -67,14 +67,15 @@ export class UserController {
     responses: {
       '200': {
         description: 'Get the JWT acces token',
-        content: {'application/json': {schema: {'x-ts-type': UserCreateRequest}}}
+        content: {'application/json': {schema: {'x-ts-type': UserSignInResponse}}}
       },
     },
   })
   async signin(@requestBody() req:UserSignInRequest): Promise<UserSignInResponse> {
     let user = await this.userRepository.findOne( {where:{email:req.email}});
-    if(!user || user.hash !== sha512(req.password, user.salt))
-      throw new HttpErrors.NotFound('User not found of wrong password');
+    if(!user || user.hash !== sha512(req.password, user.salt)) {
+      throw new HttpErrors.NotFound('User not found or wrong password');
+    }
 
     let token = jwt.sign({ email: user.email }, user.salt, {
       expiresIn: user.defaultTokenExpirationTime*60 // expires in 24 hours
@@ -85,7 +86,7 @@ export class UserController {
 
     let response = new UserSignInResponse();
     response.token = token;
-    response.expiresAt = expiresAt;
+    response.expiresAt = expiresAt.toISOString();
 
     return response;
   };
@@ -117,7 +118,7 @@ export class UserController {
     newuser.hash = sha512(user.password, newuser.salt);
     newuser.realmId = user.realmId ? user.realmId : 'global';
     newuser.active = true;
-    newuser.createdAt = new Date().toLocaleString();
+    newuser.createdAt = new Date().toISOString();
     newuser.updatedAt = newuser.createdAt;
     newuser.roles = ["patient"];
     newuser.defaultTokenExpirationTime = 1440; // TODO: use realm expirationtime here
