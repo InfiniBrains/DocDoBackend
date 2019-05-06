@@ -1,0 +1,23 @@
+{
+  "connection": "default",
+  "collectionName": "patient",
+  "info": {
+    "name": "patient",
+    "description": ""
+  },
+  "options": {
+    "timestamps": true
+  },
+  "attributes": {
+    "name": {
+      "maxLength": 255,
+      "type": "string"
+    },
+    "cpf": {
+      "type": "string"
+    },
+    "birthdate": {
+      "type": "date"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "defaultConnection": "default",
+  "connections": {
+    "default": {
+      "connector": "strapi-hook-mongoose",
+      "settings": {
+        "client": "mongo",
+        "host": "ds147534.mlab.com",
+        "port": "47534",
+        "database": "docdoserver",
+        "username": "docdo",
+        "password": "123deoliveira4"
+      },
+      "options": {
+        "authenticationDatabase": "docdoserver"
+      }
+    }
+  }
+}
